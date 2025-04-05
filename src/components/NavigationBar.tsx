@@ -8,6 +8,7 @@ import {
   DropdownMenuItem, 
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
+import { Link } from "react-router-dom";
 
 const languages = [
   { code: "en", name: "English" },
@@ -77,8 +78,8 @@ const NavigationBar = () => {
           Sign In
         </Button>
         
-        <Button className="bg-blue-gradient hover:opacity-90 transition-opacity">
-          Admin
+        <Button className="bg-blue-gradient hover:opacity-90 transition-opacity" asChild>
+          <Link to="/admin">Admin</Link>
         </Button>
       </div>
     </nav>
