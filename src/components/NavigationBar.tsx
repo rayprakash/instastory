@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Globe } from "lucide-react";
+import { Link } from "react-router-dom";
 import { 
   DropdownMenu, 
   DropdownMenuContent, 
@@ -51,7 +52,9 @@ const NavigationBar = () => {
         <div className="hidden md:flex ml-10 space-x-4">
           <Button variant="link" className="text-instablue-700">Home</Button>
           <Button variant="link" className="text-instablue-700">FAQ</Button>
-          <Button variant="link" className="text-instablue-700" href="/contact">Contact</Button>
+          <Button asChild>
+            <Link to="/contact" className="text-instablue-700">Contact</Link>
+          </Button>
         </div>
       </div>
       
