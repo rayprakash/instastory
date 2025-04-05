@@ -8,7 +8,6 @@ import {
   DropdownMenuItem, 
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
-import { Link } from "react-router-dom";
 
 const languages = [
   { code: "en", name: "English" },
@@ -48,7 +47,6 @@ const NavigationBar = () => {
         
         <div className="hidden md:flex ml-10 space-x-4">
           <Button variant="link" className="text-instablue-700">Home</Button>
-          <Button variant="link" className="text-instablue-700">Features</Button>
           <Button variant="link" className="text-instablue-700">FAQ</Button>
         </div>
       </div>
@@ -76,10 +74,6 @@ const NavigationBar = () => {
         
         <Button variant="outline" className="hidden md:flex border-instablue-400 text-instablue-700 hover:bg-instablue-50">
           Sign In
-        </Button>
-        
-        <Button className="bg-blue-gradient hover:opacity-90 transition-opacity" asChild>
-          <Link to="/admin">Admin</Link>
         </Button>
       </div>
     </nav>
