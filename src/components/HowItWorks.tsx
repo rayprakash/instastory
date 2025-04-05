@@ -1,5 +1,5 @@
 
-import { ArrowRight, Eye, Shield, Download, UserCheck } from "lucide-react";
+import { ArrowRight, Eye, Shield, Download, UserCheck, Search } from "lucide-react";
 
 const HowItWorks = () => {
   const steps = [
