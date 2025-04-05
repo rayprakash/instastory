@@ -1,12 +1,12 @@
 import { useState } from "react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { Settings, LogOut, Users, MessageSquare, Image, HelpCircle, Layout, FileText, Globe } from "lucide-react";
+import { Settings, LogOut, Users, MessageSquare, Image, HelpCircle, Layout, FileText, Globe, Mail } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useSeo } from "@/contexts/SeoContext";
 import SeoSettings from "./SeoSettings";
 import PageManager from "./PageManager";
 import SiteSettings from "./SiteSettings";
+import ContactSettings from "./ContactSettings";
 
 interface DashboardProps {
   onLogout: () => void;
@@ -78,6 +78,12 @@ const Dashboard = ({ onLogout }: DashboardProps) => {
       name: "Pages",
       icon: FileText,
       content: <PageManager onSave={handleSaveChanges} />
+    },
+    {
+      id: "contact",
+      name: "Contact Form",
+      icon: Mail,
+      content: <ContactSettings onSave={handleSaveChanges} />
     },
     {
       id: "site",

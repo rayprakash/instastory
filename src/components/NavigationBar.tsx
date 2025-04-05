@@ -15,6 +15,9 @@ const languages = [
   { code: "fr", name: "Français" },
   { code: "de", name: "Deutsch" },
   { code: "zh", name: "中文" },
+  { code: "hi", name: "हिंदी" },
+  { code: "ar", name: "العربية" },
+  { code: "ru", name: "Русский" }
 ];
 
 const NavigationBar = () => {
@@ -48,6 +51,7 @@ const NavigationBar = () => {
         <div className="hidden md:flex ml-10 space-x-4">
           <Button variant="link" className="text-instablue-700">Home</Button>
           <Button variant="link" className="text-instablue-700">FAQ</Button>
+          <Button variant="link" className="text-instablue-700" href="/contact">Contact</Button>
         </div>
       </div>
       
@@ -71,10 +75,6 @@ const NavigationBar = () => {
             ))}
           </DropdownMenuContent>
         </DropdownMenu>
-        
-        <Button variant="outline" className="hidden md:flex border-instablue-400 text-instablue-700 hover:bg-instablue-50">
-          Sign In
-        </Button>
       </div>
     </nav>
   );
