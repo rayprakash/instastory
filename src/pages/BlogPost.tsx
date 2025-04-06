@@ -1,10 +1,11 @@
 
 import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
-import { ArrowLeft, CalendarIcon, Clock, User } from "lucide-react";
+import { ArrowLeft, CalendarIcon, Clock, User, Tag } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { BlogPost as BlogPostType } from "@/types/blog";
 import { Separator } from "@/components/ui/separator";
+import { Helmet } from "react-helmet-async";
 
 // Mock blog posts (same as in Blog.tsx)
 const mockPosts: BlogPostType[] = [
@@ -79,6 +80,22 @@ const BlogPost = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-instablue-50/50 to-white">
+      <Helmet>
+        <title>{post.title} | InstaView Blog</title>
+        <meta name="description" content={post.excerpt} />
+        <meta name="keywords" content={post.keywords.join(', ')} />
+        {/* Open Graph tags for social sharing */}
+        <meta property="og:title" content={post.title} />
+        <meta property="og:description" content={post.excerpt} />
+        {post.featuredImage && <meta property="og:image" content={post.featuredImage} />}
+        <meta property="og:type" content="article" />
+        {/* Twitter Card tags */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={post.title} />
+        <meta name="twitter:description" content={post.excerpt} />
+        {post.featuredImage && <meta name="twitter:image" content={post.featuredImage} />}
+      </Helmet>
+
       <div className="container py-12 px-4 max-w-4xl mx-auto">
         <Button variant="ghost" className="mb-6" asChild>
           <Link to="/blog" className="flex items-center">
@@ -91,7 +108,7 @@ const BlogPost = () => {
           <div className="w-full h-[400px] overflow-hidden rounded-xl mb-8">
             <img 
               src={post.featuredImage} 
-              alt={post.title} 
+              alt={post.imageAlt || post.title} 
               className="w-full h-full object-cover"
             />
           </div>
@@ -108,6 +125,12 @@ const BlogPost = () => {
             <CalendarIcon size={16} className="mr-1" /> 
             {new Date(post.publishDate).toLocaleDateString()}
           </span>
+          {post.lastModified && (
+            <span className="flex items-center">
+              <Clock size={16} className="mr-1" /> 
+              Updated: {new Date(post.lastModified).toLocaleDateString()}
+            </span>
+          )}
         </div>
 
         <Separator className="mb-8" />
@@ -122,8 +145,9 @@ const BlogPost = () => {
           {post.keywords.map(keyword => (
             <span 
               key={keyword} 
-              className="bg-instablue-100 text-instablue-800 px-3 py-1 rounded-full text-sm"
+              className="bg-instablue-100 text-instablue-800 px-3 py-1 rounded-full text-sm flex items-center"
             >
+              <Tag size={12} className="mr-1" />
               {keyword}
             </span>
           ))}
