@@ -22,19 +22,12 @@ const Hero = () => {
             Browse and download Instagram stories without being detected, completely free and without login.
           </p>
           
-          <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8">
+          <div className="flex justify-center mb-8">
             <Button 
               className="bg-white text-instablue-800 hover:bg-instablue-50 px-8 py-6 text-lg"
               onClick={() => document.getElementById('search-section')?.scrollIntoView({ behavior: 'smooth' })}
             >
               Try Now
-            </Button>
-            <Button 
-              variant="outline" 
-              className="border-white text-white hover:bg-white/10 px-8 py-6 text-lg"
-              onClick={() => document.getElementById('how-it-works')?.scrollIntoView({ behavior: 'smooth' })}
-            >
-              How It Works
             </Button>
           </div>
           

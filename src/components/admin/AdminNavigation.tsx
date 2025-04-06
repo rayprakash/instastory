@@ -1,5 +1,5 @@
 
-import { Settings, LogOut, Users, MessageSquare, Image, HelpCircle, Layout, FileText, Globe, Mail } from "lucide-react";
+import { Settings, LogOut, Users, MessageSquare, Image, HelpCircle, Layout, FileText, Globe, Mail, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface AdminNavigationProps {
@@ -15,7 +15,7 @@ interface AdminNavigationProps {
 
 const AdminNavigation = ({ activeSection, setActiveSection, onLogout, sections }: AdminNavigationProps) => {
   return (
-    <div className="bg-instablue-800 text-white p-6">
+    <div className="bg-instablue-800 text-white p-6 h-full min-h-screen">
       <div className="mb-8">
         <h1 className="text-2xl font-bold">Admin Panel</h1>
         <p className="text-instablue-300 text-sm mt-1">Manage your website</p>
