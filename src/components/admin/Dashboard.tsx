@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { Settings, LogOut, Users, MessageSquare, Image, HelpCircle, Layout, FileText, Globe, Mail, User } from "lucide-react";
+import { Settings, LogOut, Users, MessageSquare, Image, HelpCircle, Layout, FileText, Globe, Mail, User, BookText } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useSeo } from "@/contexts/SeoContext";
 import AdminNavigation from "./AdminNavigation";
@@ -16,6 +16,7 @@ import FaqsSection from "./sections/FaqsSection";
 import AdUnitsSection from "./sections/AdUnitsSection";
 import ProfileSection from "./sections/ProfileSection";
 import LanguageSettings from "./LanguageSettings";
+import BlogPostsSection from "./sections/BlogPostsSection";
 
 interface DashboardProps {
   onLogout: () => void;
@@ -45,6 +46,12 @@ const Dashboard = ({ onLogout }: DashboardProps) => {
       name: "Profile",
       icon: User,
       content: <ProfileSection onSave={handleSaveChanges} />
+    },
+    {
+      id: "blog",
+      name: "Blog Posts",
+      icon: BookText,
+      content: <BlogPostsSection onSave={handleSaveChanges} />
     },
     {
       id: "seo",
