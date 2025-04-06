@@ -15,6 +15,7 @@ import FeaturesSection from "./sections/FeaturesSection";
 import FaqsSection from "./sections/FaqsSection";
 import AdUnitsSection from "./sections/AdUnitsSection";
 import ProfileSection from "./sections/ProfileSection";
+import LanguageSettings from "./LanguageSettings";
 
 interface DashboardProps {
   onLogout: () => void;
@@ -50,6 +51,12 @@ const Dashboard = ({ onLogout }: DashboardProps) => {
       name: "SEO Settings",
       icon: Globe,
       content: <SeoSettings onSave={handleSaveChanges} />
+    },
+    {
+      id: "languages",
+      name: "Languages",
+      icon: Globe,
+      content: <LanguageSettings onSave={handleSaveChanges} />
     },
     {
       id: "pages",

@@ -2,7 +2,6 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Globe } from "lucide-react";
-import { Link } from "react-router-dom";
 import { 
   DropdownMenu, 
   DropdownMenuContent, 
@@ -25,17 +24,19 @@ const NavigationBar = () => {
   const [currentLanguage, setCurrentLanguage] = useState("en");
 
   useEffect(() => {
-    // Detect user's browser language
+    // Detect user's browser language or get from localStorage
+    const savedLang = localStorage.getItem("preferred-language");
     const browserLang = navigator.language.split('-')[0];
-    const supported = languages.find(lang => lang.code === browserLang);
+    const supported = languages.find(lang => lang.code === (savedLang || browserLang));
     
     if (supported) {
-      setCurrentLanguage(browserLang);
+      setCurrentLanguage(supported.code);
     }
   }, []);
 
   const handleLanguageChange = (code: string) => {
     setCurrentLanguage(code);
+    localStorage.setItem("preferred-language", code);
     // In a real app, you would update the i18n context here
     console.log(`Language changed to ${code}`);
   };
@@ -51,10 +52,6 @@ const NavigationBar = () => {
         
         <div className="hidden md:flex ml-10 space-x-4">
           <Button variant="link" className="text-instablue-700">Home</Button>
-          <Button variant="link" className="text-instablue-700">FAQ</Button>
-          <Button asChild>
-            <Link to="/contact" className="text-instablue-700">Contact</Link>
-          </Button>
         </div>
       </div>
       
