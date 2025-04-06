@@ -6,48 +6,23 @@ import { Button } from "@/components/ui/button";
 import { BlogPost as BlogPostType } from "@/types/blog";
 import { Separator } from "@/components/ui/separator";
 import { Helmet } from "react-helmet-async";
-
-// Mock blog posts (same as in Blog.tsx)
-const mockPosts: BlogPostType[] = [
-  {
-    id: "1",
-    title: "How to View Instagram Stories Anonymously",
-    slug: "how-to-view-instagram-stories-anonymously",
-    content: "<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vivamus lacinia odio vitae vestibulum vestibulum. Cras porttitor commodo suscipit. Quisque quis ipsum in metus condimentum aliquam. Suspendisse dignissim ante sit amet nulla ullamcorper, in commodo erat rutrum.</p><p>Nullam hendrerit lectus non fringilla dictum. Fusce dapibus, leo ut malesuada aliquam, eros dolor varius felis, at sagittis ipsum dolor in turpis. Curabitur maximus mi in metus hendrerit, id finibus ante elementum. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia curae; Ut at dolor metus. Suspendisse dapibus sapien in diam dignissim, sit amet elementum massa hendrerit.</p><h2>Main Techniques</h2><ul><li>Using third-party apps</li><li>Browser extensions</li><li>Using airplane mode</li></ul><p>Sed ut dignissim libero, in finibus purus. Curabitur et risus nec justo porttitor finibus. Phasellus molestie, justo et pellentesque gravida, ante est auctor risus, non facilisis nulla nisi non dolor.</p>",
-    excerpt: "Learn the best techniques to view Instagram stories without being detected by the account owner.",
-    featuredImage: "https://via.placeholder.com/1200x600",
-    keywords: ["instagram", "stories", "anonymous", "privacy"],
-    author: "Admin",
-    publishDate: "2023-04-06T10:00:00Z",
-    status: "published"
-  },
-  {
-    id: "2",
-    title: "Instagram Privacy Features You Should Know About",
-    slug: "instagram-privacy-features",
-    content: "<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vivamus lacinia odio vitae vestibulum vestibulum. Cras porttitor commodo suscipit. Quisque quis ipsum in metus condimentum aliquam.</p><p>Suspendisse dignissim ante sit amet nulla ullamcorper, in commodo erat rutrum. Nullam hendrerit lectus non fringilla dictum. Fusce dapibus, leo ut malesuada aliquam, eros dolor varius felis, at sagittis ipsum dolor in turpis.</p><h2>Key Privacy Features</h2><ul><li>Two-factor authentication</li><li>Private accounts</li><li>Story controls</li><li>Restricted accounts</li></ul><p>Curabitur maximus mi in metus hendrerit, id finibus ante elementum. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia curae; Ut at dolor metus.</p>",
-    excerpt: "Discover the hidden privacy features on Instagram that can help protect your account and data.",
-    featuredImage: "https://via.placeholder.com/1200x600",
-    keywords: ["instagram", "privacy", "security", "features"],
-    author: "Admin",
-    publishDate: "2023-04-04T14:30:00Z",
-    status: "published"
-  }
-];
+import { getBlogPosts } from "@/data/blogData";
+import { useSeo } from "@/contexts/SeoContext";
 
 const BlogPost = () => {
   const { slug } = useParams<{ slug: string }>();
   const [post, setPost] = useState<BlogPostType | null>(null);
   const [loading, setLoading] = useState(true);
+  const { seoSettings } = useSeo();
 
   useEffect(() => {
-    // Simulate API fetch
     setLoading(true);
-    setTimeout(() => {
-      const foundPost = mockPosts.find(p => p.slug === slug);
-      setPost(foundPost || null);
-      setLoading(false);
-    }, 300);
+    
+    const posts = getBlogPosts();
+    const foundPost = posts.find(p => p.slug === slug && p.status === 'published');
+    
+    setPost(foundPost || null);
+    setLoading(false);
   }, [slug]);
 
   if (loading) {
@@ -81,7 +56,7 @@ const BlogPost = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-instablue-50/50 to-white">
       <Helmet>
-        <title>{post.title} | InstaView Blog</title>
+        <title>{post.title} | {seoSettings.title}</title>
         <meta name="description" content={post.excerpt} />
         <meta name="keywords" content={post.keywords.join(', ')} />
         {/* Open Graph tags for social sharing */}

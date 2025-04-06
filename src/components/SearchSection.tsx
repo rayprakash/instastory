@@ -2,14 +2,17 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, ArrowRight, Download, X } from "lucide-react";
+import { Search, ArrowRight, Download, X, Info } from "lucide-react";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogDescription,
+  DialogFooter,
 } from "@/components/ui/dialog";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
+import { toast } from "sonner";
 
 const SearchSection = () => {
   const [username, setUsername] = useState("");
@@ -30,17 +33,24 @@ const SearchSection = () => {
       setIsLoading(false);
       setIsDialogOpen(true);
       
-      // Mock results
+      // Mock results - this is just a demo
       setResults([
         { id: 1, type: 'story', thumbnail: 'https://picsum.photos/200/300', timestamp: new Date().toISOString() },
         { id: 2, type: 'story', thumbnail: 'https://picsum.photos/201/300', timestamp: new Date().toISOString() },
         { id: 3, type: 'story', thumbnail: 'https://picsum.photos/202/300', timestamp: new Date().toISOString() },
       ]);
+      
+      toast.info("This is a demo with mock data - real Instagram API integration requires backend development", {
+        duration: 5000,
+      });
     }, 1500);
   };
 
   const handleDownload = (id: number) => {
     console.log(`Downloading item ${id}`);
+    toast.info("Download functionality would be implemented in a full application", {
+      duration: 3000,
+    });
     // In a real app, this would trigger the download
   };
 
@@ -79,6 +89,13 @@ const SearchSection = () => {
                 )}
               </Button>
             </div>
+            <Alert variant="info" className="bg-blue-50 text-blue-800 border-blue-200">
+              <Info className="h-4 w-4" />
+              <AlertTitle>Demo Mode</AlertTitle>
+              <AlertDescription>
+                This is a frontend demo. Real Instagram data requires backend API integration.
+              </AlertDescription>
+            </Alert>
             <p className="text-sm text-gray-500 text-center">
               Enter a public Instagram username to view their stories anonymously
             </p>
@@ -94,6 +111,13 @@ const SearchSection = () => {
               View or download stories without being detected
             </DialogDescription>
           </DialogHeader>
+          
+          <Alert variant="info" className="mb-4 bg-blue-50 text-blue-800 border-blue-200">
+            <Info className="h-4 w-4" />
+            <AlertDescription>
+              These are sample images. Real Instagram API integration requires backend development.
+            </AlertDescription>
+          </Alert>
           
           <div className="grid grid-cols-3 gap-2 my-4">
             {results.map((item) => (
@@ -115,7 +139,7 @@ const SearchSection = () => {
             ))}
           </div>
           
-          <div className="flex justify-end mt-4">
+          <DialogFooter>
             <Button 
               variant="outline"
               onClick={() => setIsDialogOpen(false)}
@@ -125,11 +149,13 @@ const SearchSection = () => {
             </Button>
             <Button 
               className="bg-blue-gradient hover:opacity-90"
-              onClick={() => console.log("View all stories")}
+              onClick={() => {
+                toast.info("This is a demo with mock data. Full functionality would require backend development.");
+              }}
             >
               View All Stories
             </Button>
-          </div>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
       

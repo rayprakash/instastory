@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Edit, Trash2, Plus, Save, FileText } from 'lucide-react';
+import { toast } from "sonner";
 
 interface PageManagerProps {
   onSave: () => void;
@@ -18,17 +19,25 @@ interface Page {
 }
 
 const PageManager = ({ onSave }: PageManagerProps) => {
-  const [pages, setPages] = useState<Page[]>(() => {
-    const savedPages = localStorage.getItem('instaview-pages');
-    return savedPages ? JSON.parse(savedPages) : [];
-  });
-  
+  const [pages, setPages] = useState<Page[]>([]);
   const [currentPage, setCurrentPage] = useState<Page | null>(null);
   const [isEditing, setIsEditing] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   
+  // Load pages from localStorage
   useEffect(() => {
-    localStorage.setItem('instaview-pages', JSON.stringify(pages));
-  }, [pages]);
+    setIsLoading(true);
+    const savedPages = localStorage.getItem('instaview-pages');
+    setPages(savedPages ? JSON.parse(savedPages) : []);
+    setIsLoading(false);
+  }, []);
+  
+  // Save pages to localStorage whenever they change
+  useEffect(() => {
+    if (!isLoading) {
+      localStorage.setItem('instaview-pages', JSON.stringify(pages));
+    }
+  }, [pages, isLoading]);
   
   const handleAddNew = () => {
     const newPage: Page = {
@@ -54,6 +63,7 @@ const PageManager = ({ onSave }: PageManagerProps) => {
         setCurrentPage(null);
         setIsEditing(false);
       }
+      toast.success("Page deleted successfully");
       onSave();
     }
   };
@@ -70,8 +80,10 @@ const PageManager = ({ onSave }: PageManagerProps) => {
     
     if (pages.find(p => p.id === updatedPage.id)) {
       setPages(pages.map(p => p.id === updatedPage.id ? updatedPage : p));
+      toast.success("Page updated successfully");
     } else {
       setPages([...pages, updatedPage]);
+      toast.success("Page created successfully");
     }
     
     setCurrentPage(null);
@@ -85,6 +97,10 @@ const PageManager = ({ onSave }: PageManagerProps) => {
     const { name, value } = e.target;
     setCurrentPage({ ...currentPage, [name]: value });
   };
+  
+  if (isLoading) {
+    return <div className="py-8 text-center">Loading pages...</div>;
+  }
   
   return (
     <div className="space-y-6">

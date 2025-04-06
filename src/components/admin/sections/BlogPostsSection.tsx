@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Search, Plus, Edit, Trash2, Eye, Filter, ArrowUpDown } from "lucide-react";
 import { BlogPost } from "@/types/blog";
@@ -13,56 +13,26 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import BlogPostEditor from "@/components/admin/BlogPostEditor";
-
-// Mock blog posts for demonstration
-const mockPosts: BlogPost[] = [
-  {
-    id: "1",
-    title: "How to View Instagram Stories Anonymously",
-    slug: "how-to-view-instagram-stories-anonymously",
-    content: "Lorem ipsum dolor sit amet...",
-    excerpt: "Learn the best techniques to view Instagram stories without being detected by the account owner.",
-    featuredImage: "https://via.placeholder.com/800x400",
-    keywords: ["instagram", "stories", "anonymous", "privacy"],
-    author: "Admin",
-    publishDate: "2023-04-06T10:00:00Z",
-    status: "published"
-  },
-  {
-    id: "2",
-    title: "Instagram Privacy Features You Should Know About",
-    slug: "instagram-privacy-features",
-    content: "Lorem ipsum dolor sit amet...",
-    excerpt: "Discover the hidden privacy features on Instagram that can help protect your account and data.",
-    featuredImage: "https://via.placeholder.com/800x400",
-    keywords: ["instagram", "privacy", "security", "features"],
-    author: "Admin",
-    publishDate: "2023-04-04T14:30:00Z",
-    status: "published"
-  },
-  {
-    id: "3",
-    title: "5 Best Tools for Social Media Management",
-    slug: "best-tools-social-media-management",
-    content: "Draft content...",
-    excerpt: "A comprehensive guide to the best tools for managing your social media presence.",
-    featuredImage: "",
-    keywords: ["social media", "tools", "management", "marketing"],
-    author: "Admin",
-    publishDate: "2023-04-08T09:15:00Z",
-    status: "draft"
-  }
-];
+import { getBlogPosts, saveBlogPosts } from "@/data/blogData";
+import { toast } from "sonner";
 
 interface BlogPostsSectionProps {
   onSave: () => void;
 }
 
 const BlogPostsSection = ({ onSave }: BlogPostsSectionProps) => {
-  const [posts, setPosts] = useState<BlogPost[]>(mockPosts);
+  const [posts, setPosts] = useState<BlogPost[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [showEditor, setShowEditor] = useState(false);
   const [currentPost, setCurrentPost] = useState<BlogPost | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  // Load posts from localStorage on component mount
+  useEffect(() => {
+    const loadedPosts = getBlogPosts();
+    setPosts(loadedPosts);
+    setLoading(false);
+  }, []);
 
   const handleNewPost = () => {
     setCurrentPost(null);
@@ -75,23 +45,32 @@ const BlogPostsSection = ({ onSave }: BlogPostsSectionProps) => {
   };
 
   const handleDeletePost = (id: string) => {
-    // In a real app, you would make an API call to delete the post
-    setPosts(posts.filter(post => post.id !== id));
+    if (confirm('Are you sure you want to delete this post?')) {
+      const updatedPosts = posts.filter(post => post.id !== id);
+      setPosts(updatedPosts);
+      saveBlogPosts(updatedPosts);
+      toast.success("Blog post deleted successfully");
+      onSave();
+    }
   };
 
   const handleSavePost = (post: BlogPost) => {
+    let updatedPosts: BlogPost[];
+    
     if (post.id) {
       // Update existing post
-      setPosts(posts.map(p => p.id === post.id ? post : p));
+      updatedPosts = posts.map(p => p.id === post.id ? post : p);
     } else {
       // Create new post with generated ID
       const newPost = {
         ...post,
         id: Math.random().toString(36).substring(2, 9),
       };
-      setPosts([newPost, ...posts]);
+      updatedPosts = [newPost, ...posts];
     }
     
+    setPosts(updatedPosts);
+    saveBlogPosts(updatedPosts);
     setShowEditor(false);
     onSave();
   };
@@ -152,7 +131,13 @@ const BlogPostsSection = ({ onSave }: BlogPostsSectionProps) => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredPosts.length === 0 ? (
+            {loading ? (
+              <TableRow>
+                <TableCell colSpan={4} className="text-center py-10">
+                  Loading blog posts...
+                </TableCell>
+              </TableRow>
+            ) : filteredPosts.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={4} className="text-center py-10 text-gray-500">
                   No blog posts found. Create your first post to get started.
