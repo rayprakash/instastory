@@ -12,6 +12,7 @@ import NotFound from "./pages/NotFound";
 import Blog from "./pages/Blog";
 import BlogPost from "./pages/BlogPost";
 import { SeoProvider } from "./contexts/SeoContext";
+import CustomPage from "./pages/CustomPage";
 
 const queryClient = new QueryClient();
 
@@ -29,6 +30,7 @@ const App = () => (
               <Route path="/contact" element={<Contact />} />
               <Route path="/blog" element={<Blog />} />
               <Route path="/blog/:slug" element={<BlogPost />} />
+              <Route path="/:slug" element={<CustomPage />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>

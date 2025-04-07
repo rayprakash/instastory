@@ -89,7 +89,7 @@ const SearchSection = () => {
                 )}
               </Button>
             </div>
-            <Alert variant="info" className="bg-blue-50 text-blue-800 border-blue-200">
+            <Alert className="bg-blue-50 text-blue-800 border-blue-200">
               <Info className="h-4 w-4" />
               <AlertTitle>Demo Mode</AlertTitle>
               <AlertDescription>
@@ -112,7 +112,7 @@ const SearchSection = () => {
             </DialogDescription>
           </DialogHeader>
           
-          <Alert variant="info" className="mb-4 bg-blue-50 text-blue-800 border-blue-200">
+          <Alert className="mb-4 bg-blue-50 text-blue-800 border-blue-200">
             <Info className="h-4 w-4" />
             <AlertDescription>
               These are sample images. Real Instagram API integration requires backend development.
