@@ -1,4 +1,3 @@
-
 import { UserCheck, ShieldCheck, Clock, Download, Eye, Lock, Zap } from "lucide-react";
 
 const Features = () => {
@@ -63,10 +62,8 @@ const Features = () => {
         </div>
       </div>
       
-      {/* Ad space below features */}
-      <div className="ad-container mt-12 max-w-3xl mx-auto">
-        Advertisement Space
-      </div>
+      {/* Ad container with no text label */}
+      <div className="ad-container mt-12 max-w-3xl mx-auto"></div>
     </section>
   );
 };

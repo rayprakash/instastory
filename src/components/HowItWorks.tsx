@@ -1,4 +1,3 @@
-
 import { ArrowRight, Search, Eye, Download, Shield, Users, Lock, MousePointer } from "lucide-react";
 
 const HowItWorks = () => {
@@ -100,10 +99,7 @@ const HowItWorks = () => {
         </div>
       </div>
       
-      {/* Ad space below how it works */}
-      <div className="ad-container mt-12 max-w-3xl mx-auto">
-        Advertisement Space
-      </div>
+      <div className="ad-container mt-12 max-w-3xl mx-auto"></div>
     </section>
   );
 };

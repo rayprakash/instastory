@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Star } from "lucide-react";
 import { 
@@ -99,10 +98,7 @@ const Testimonials = () => {
         </div>
       </div>
       
-      {/* Ad space below testimonials */}
-      <div className="ad-container mt-12 max-w-3xl mx-auto">
-        Advertisement Space
-      </div>
+      <div className="ad-container mt-12 max-w-3xl mx-auto"></div>
     </section>
   );
 };
