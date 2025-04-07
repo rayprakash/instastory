@@ -31,7 +31,6 @@ const Index = () => {
     if (ad && ad.code) {
       return (
         <div className="ad-container max-w-5xl mx-auto my-8 px-4">
-          <div className="text-center text-sm text-gray-400 mb-2">Advertisement</div>
           <div dangerouslySetInnerHTML={{ __html: ad.code }} />
         </div>
       );
