@@ -60,21 +60,36 @@ const defaultSettings: AdminSettings = {
 
 // Get settings from localStorage or use defaults
 export const getAdminSettings = (): AdminSettings => {
-  const savedSettings = localStorage.getItem(ADMIN_SETTINGS_KEY);
-  
-  if (savedSettings) {
-    return JSON.parse(savedSettings);
+  if (typeof window === 'undefined') {
+    return defaultSettings;
   }
-  
-  // Save defaults to localStorage
-  localStorage.setItem(ADMIN_SETTINGS_KEY, JSON.stringify(defaultSettings));
-  
-  return defaultSettings;
+
+  try {
+    const savedSettings = localStorage.getItem(ADMIN_SETTINGS_KEY);
+    
+    if (savedSettings) {
+      return JSON.parse(savedSettings);
+    }
+    
+    // Save defaults to localStorage
+    localStorage.setItem(ADMIN_SETTINGS_KEY, JSON.stringify(defaultSettings));
+    
+    return defaultSettings;
+  } catch (error) {
+    console.error("Error retrieving admin settings:", error);
+    return defaultSettings;
+  }
 };
 
 // Save settings to localStorage
 export const saveAdminSettings = (settings: AdminSettings): void => {
-  localStorage.setItem(ADMIN_SETTINGS_KEY, JSON.stringify(settings));
+  if (typeof window === 'undefined') return;
+
+  try {
+    localStorage.setItem(ADMIN_SETTINGS_KEY, JSON.stringify(settings));
+  } catch (error) {
+    console.error("Error saving admin settings:", error);
+  }
 };
 
 // Update specific settings
@@ -94,5 +109,17 @@ export const getAdUnits = (): AdUnit[] => {
 export const saveAdUnits = (adUnits: AdUnit[]): void => {
   const settings = getAdminSettings();
   settings.adUnits = adUnits;
+  saveAdminSettings(settings);
+};
+
+// Get Google Language API key
+export const getGoogleLanguageApi = (): string => {
+  return getAdminSettings().googleLanguageApi || '';
+};
+
+// Save Google Language API key
+export const saveGoogleLanguageApi = (apiKey: string): void => {
+  const settings = getAdminSettings();
+  settings.googleLanguageApi = apiKey;
   saveAdminSettings(settings);
 };

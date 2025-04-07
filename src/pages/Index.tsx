@@ -15,8 +15,13 @@ const Index = () => {
 
   useEffect(() => {
     // Load ad units from localStorage
-    const savedAdUnits = getAdUnits();
-    setAdUnits(savedAdUnits);
+    try {
+      const savedAdUnits = getAdUnits();
+      console.log("Index page loaded ad units:", savedAdUnits);
+      setAdUnits(savedAdUnits);
+    } catch (error) {
+      console.error("Error loading ad units on index page:", error);
+    }
   }, []);
 
   // Render ad by location

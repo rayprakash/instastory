@@ -10,10 +10,12 @@ interface AdUnitsSectionProps {
 
 const AdUnitsSection = ({ onSave }: AdUnitsSectionProps) => {
   const [adUnits, setAdUnits] = useState<AdUnit[]>([]);
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     // Load ad units from localStorage
     const savedAdUnits = getAdUnits();
+    console.log("Loaded ad units:", savedAdUnits);
     setAdUnits(savedAdUnits);
   }, []);
 
@@ -26,10 +28,19 @@ const AdUnitsSection = ({ onSave }: AdUnitsSectionProps) => {
   };
 
   const handleSave = () => {
-    // Save ad units to localStorage
-    saveAdUnits(adUnits);
-    toast.success("Ad units saved successfully");
-    onSave();
+    setIsSaving(true);
+    try {
+      // Save ad units to localStorage
+      saveAdUnits(adUnits);
+      console.log("Saved ad units:", adUnits);
+      toast.success("Ad units saved successfully");
+      onSave();
+    } catch (error) {
+      console.error("Error saving ad units:", error);
+      toast.error("Failed to save ad units");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -98,8 +109,9 @@ const AdUnitsSection = ({ onSave }: AdUnitsSectionProps) => {
         <Button 
           onClick={handleSave}
           className="bg-blue-gradient hover:opacity-90 px-8"
+          disabled={isSaving}
         >
-          Save Changes
+          {isSaving ? 'Saving...' : 'Save Changes'}
         </Button>
       </div>
     </div>
