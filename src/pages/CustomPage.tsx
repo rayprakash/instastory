@@ -8,7 +8,7 @@ import { useSeo } from "@/contexts/SeoContext";
 const CustomPage = () => {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
-  const { updateSeo } = useSeo();
+  const { updateSeoSettings } = useSeo();
   const [pageContent, setPageContent] = useState<{
     title: string;
     content: string;
@@ -42,8 +42,8 @@ const CustomPage = () => {
             content: page.content,
           });
           
-          // Update SEO
-          updateSeo({
+          // Update SEO - using correct function name
+          updateSeoSettings({
             title: page.title,
             description: page.description || `${page.title} - InstaView`,
           });
@@ -60,7 +60,7 @@ const CustomPage = () => {
     };
 
     loadPage();
-  }, [slug, navigate, updateSeo]);
+  }, [slug, navigate, updateSeoSettings]);
 
   if (loading) {
     return (
