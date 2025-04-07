@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -16,7 +15,10 @@ interface Page {
   slug: string;
   content: string;
   createdAt: string;
+  description?: string;
 }
+
+const PAGE_STORAGE_KEY = 'instaview-custom-pages';
 
 const PageManager = ({ onSave }: PageManagerProps) => {
   const [pages, setPages] = useState<Page[]>([]);
@@ -27,7 +29,8 @@ const PageManager = ({ onSave }: PageManagerProps) => {
   // Load pages from localStorage
   useEffect(() => {
     setIsLoading(true);
-    const savedPages = localStorage.getItem('instaview-pages');
+    const savedPages = localStorage.getItem(PAGE_STORAGE_KEY);
+    console.log("Loaded custom pages:", savedPages);
     setPages(savedPages ? JSON.parse(savedPages) : []);
     setIsLoading(false);
   }, []);
@@ -35,7 +38,8 @@ const PageManager = ({ onSave }: PageManagerProps) => {
   // Save pages to localStorage whenever they change
   useEffect(() => {
     if (!isLoading) {
-      localStorage.setItem('instaview-pages', JSON.stringify(pages));
+      console.log("Saving custom pages:", pages);
+      localStorage.setItem(PAGE_STORAGE_KEY, JSON.stringify(pages));
     }
   }, [pages, isLoading]);
   
@@ -46,6 +50,7 @@ const PageManager = ({ onSave }: PageManagerProps) => {
       slug: 'new-page',
       content: '',
       createdAt: new Date().toISOString(),
+      description: '',
     };
     setCurrentPage(newPage);
     setIsEditing(true);
@@ -144,6 +149,17 @@ const PageManager = ({ onSave }: PageManagerProps) => {
               <p className="text-xs text-gray-500 mt-1">
                 This will be the URL of your page: yourdomain.com/{currentPage.slug}
               </p>
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Description (for SEO)</label>
+              <Input
+                name="description"
+                value={currentPage.description || ''}
+                onChange={handleChange}
+                className="w-full"
+                placeholder="Enter page description for SEO"
+              />
             </div>
             
             <div>

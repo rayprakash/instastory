@@ -19,8 +19,10 @@ const CustomPage = () => {
     const loadPage = () => {
       try {
         console.log("Loading custom page with slug:", slug);
-        // Get custom pages from localStorage
+        // Get custom pages from localStorage - fixing the storage key from instaview-pages to instaview-custom-pages
         const pagesStr = localStorage.getItem("instaview-custom-pages");
+        
+        console.log("Custom pages from localStorage:", pagesStr);
         
         // If no pages in localStorage, redirect to 404
         if (!pagesStr) {
