@@ -1,7 +1,9 @@
+
 /**
  * Instagram API Integration Utility
  * 
- * This file contains helper functions for integrating with Instagram's API via RapidAPI.
+ * This file contains helper functions for integrating with Instagram's API.
+ * For full implementation details, see the guide at src/utils/instagramApi.md
  */
 
 // Instagram Story Data Structure
@@ -13,42 +15,43 @@ export interface InstagramStory {
   username: string;
 }
 
-// RapidAPI Configuration
-interface RapidAPIConfig {
-  apiKey: string;
-  baseURL: string;
+// Local Storage Key for API configuration
+const INSTAGRAM_API_CONFIG_STORAGE = 'instaview-api-config';
+
+// API Configuration type
+export interface InstagramApiConfig {
+  serverUrl?: string;
+  useBackend: boolean;
 }
 
-// Local Storage Key for API Key
-const RAPID_API_KEY_STORAGE = 'instaview-rapidapi-key';
-
 /**
- * Save the RapidAPI key to localStorage
- * @param apiKey The RapidAPI key to save
+ * Save the Instagram API config to localStorage
+ * @param config The API configuration to save
  */
-export const saveRapidAPIKey = (apiKey: string): void => {
+export const saveApiConfig = (config: InstagramApiConfig): void => {
   if (typeof window === 'undefined') return;
   
   try {
-    localStorage.setItem(RAPID_API_KEY_STORAGE, apiKey);
-    console.log('RapidAPI key saved successfully');
+    localStorage.setItem(INSTAGRAM_API_CONFIG_STORAGE, JSON.stringify(config));
+    console.log('Instagram API config saved successfully');
   } catch (error) {
-    console.error('Error saving RapidAPI key:', error);
+    console.error('Error saving Instagram API config:', error);
   }
 };
 
 /**
- * Get the saved RapidAPI key from localStorage
- * @returns The saved RapidAPI key or empty string if not found
+ * Get the saved API config from localStorage
+ * @returns The saved API config or default values if not found
  */
-export const getRapidAPIKey = (): string => {
-  if (typeof window === 'undefined') return '';
+export const getApiConfig = (): InstagramApiConfig => {
+  if (typeof window === 'undefined') return { useBackend: false };
   
   try {
-    return localStorage.getItem(RAPID_API_KEY_STORAGE) || '';
+    const config = localStorage.getItem(INSTAGRAM_API_CONFIG_STORAGE);
+    return config ? JSON.parse(config) : { useBackend: false };
   } catch (error) {
-    console.error('Error retrieving RapidAPI key:', error);
-    return '';
+    console.error('Error retrieving Instagram API config:', error);
+    return { useBackend: false };
   }
 };
 
@@ -71,48 +74,29 @@ const MOCK_STORIES: InstagramStory[] = [
 ];
 
 /**
- * Fetches Instagram stories using RapidAPI
+ * Fetches Instagram stories 
  * @param username Instagram username to fetch stories for
  * @returns Promise containing Instagram stories
  */
 export const fetchInstagramStories = async (username: string): Promise<InstagramStory[]> => {
-  const apiKey = getRapidAPIKey();
+  const config = getApiConfig();
   
-  // If no API key is available, return mock data
-  if (!apiKey) {
-    console.warn('No RapidAPI key found, returning mock data');
+  // If backend integration is not configured, return mock data
+  if (!config.useBackend || !config.serverUrl) {
+    console.warn('Backend integration not configured, returning mock data');
     return MOCK_STORIES;
   }
   
   try {
-    // Here we would make the actual API call using the RapidAPI key
-    // For example with fetch:
-    const response = await fetch(`https://instagram-data1.p.rapidapi.com/user/stories?username=${username}`, {
-      method: 'GET',
-      headers: {
-        'X-RapidAPI-Key': apiKey,
-        'X-RapidAPI-Host': 'instagram-data1.p.rapidapi.com'
-      }
-    });
+    // Make call to your backend server which handles Instagram API securely
+    const response = await fetch(`${config.serverUrl}/api/instagram/stories/${username}`);
     
     if (!response.ok) {
       throw new Error(`API call failed with status: ${response.status}`);
     }
     
     const data = await response.json();
-    
-    // Transform the API response to match our InstagramStory interface
-    // The exact transformation depends on the RapidAPI service response format
-    // This is an example transformation:
-    const stories = data.stories?.map((item: any) => ({
-      id: item.id || `story-${Math.random()}`,
-      mediaType: item.media_type === 2 ? 'VIDEO' : 'IMAGE',
-      mediaUrl: item.media_url || item.thumbnail_url || 'https://via.placeholder.com/500',
-      timestamp: item.timestamp || new Date().toISOString(),
-      username: username
-    })) || [];
-    
-    return stories;
+    return data.stories || MOCK_STORIES;
     
   } catch (error) {
     console.error('Error fetching Instagram stories:', error);

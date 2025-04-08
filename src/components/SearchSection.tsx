@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/dialog";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { toast } from "sonner";
-import { fetchInstagramStories, saveRapidAPIKey, getRapidAPIKey, InstagramStory } from "@/utils/instagramApi";
+import { fetchInstagramStories, saveApiConfig, getApiConfig, InstagramStory, InstagramApiConfig } from "@/utils/instagramApi";
 
 const SearchSection = () => {
   const [username, setUsername] = useState("");
@@ -21,13 +21,13 @@ const SearchSection = () => {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [results, setResults] = useState<InstagramStory[]>([]);
-  const [apiKey, setApiKey] = useState("");
+  const [apiConfig, setApiConfig] = useState<InstagramApiConfig>({ useBackend: false });
 
-  // Load saved API key on component mount
+  // Load saved API config on component mount
   useEffect(() => {
-    const savedApiKey = getRapidAPIKey();
-    if (savedApiKey) {
-      setApiKey(savedApiKey);
+    const savedConfig = getApiConfig();
+    if (savedConfig) {
+      setApiConfig(savedConfig);
     }
   }, []);
 
@@ -44,8 +44,8 @@ const SearchSection = () => {
       setResults(stories);
       setIsDialogOpen(true);
       
-      if (!getRapidAPIKey()) {
-        toast.info("Using mock data. Add your RapidAPI key in settings for real Instagram data.", {
+      if (!apiConfig.useBackend) {
+        toast.info("Using mock data. Configure backend integration in settings for real Instagram data.", {
           duration: 5000,
         });
       }
@@ -57,14 +57,15 @@ const SearchSection = () => {
     }
   };
 
-  const handleSaveApiKey = () => {
-    if (apiKey.trim()) {
-      saveRapidAPIKey(apiKey.trim());
-      toast.success("API key saved successfully!");
-      setIsSettingsOpen(false);
-    } else {
-      toast.error("Please enter a valid API key.");
+  const handleSaveConfig = () => {
+    if (apiConfig.useBackend && !apiConfig.serverUrl) {
+      toast.error("Please enter a valid server URL if using backend integration.");
+      return;
     }
+    
+    saveApiConfig(apiConfig);
+    toast.success("API configuration saved successfully!");
+    setIsSettingsOpen(false);
   };
 
   const handleDownload = (id: string) => {
@@ -124,12 +125,12 @@ const SearchSection = () => {
               </Button>
             </div>
             
-            {!getRapidAPIKey() && (
+            {!apiConfig.useBackend && (
               <Alert className="bg-blue-50 text-blue-800 border-blue-200">
                 <Info className="h-4 w-4" />
-                <AlertTitle>API Key Required</AlertTitle>
+                <AlertTitle>Backend Integration Required</AlertTitle>
                 <AlertDescription>
-                  Add your RapidAPI key in settings to view real Instagram stories.
+                  Read the Instagram API guide in <code>src/utils/instagramApi.md</code> and configure backend integration.
                 </AlertDescription>
               </Alert>
             )}
@@ -151,11 +152,11 @@ const SearchSection = () => {
             </DialogDescription>
           </DialogHeader>
           
-          {!getRapidAPIKey() && (
+          {!apiConfig.useBackend && (
             <Alert className="mb-4 bg-blue-50 text-blue-800 border-blue-200">
               <Info className="h-4 w-4" />
               <AlertDescription>
-                Using mock data. Add your RapidAPI key in settings for real Instagram stories.
+                Using mock data. Read the Instagram API guide and implement backend integration for real data.
               </AlertDescription>
             </Alert>
           )}
@@ -191,8 +192,8 @@ const SearchSection = () => {
             <Button 
               className="bg-blue-gradient hover:opacity-90"
               onClick={() => {
-                if (!getRapidAPIKey()) {
-                  toast.info("Add your RapidAPI key in settings for real Instagram data.");
+                if (!apiConfig.useBackend) {
+                  toast.info("Read the Instagram API guide and implement backend integration.");
                 } else {
                   toast.info("This is a demo with limited functionality.");
                 }
@@ -204,33 +205,47 @@ const SearchSection = () => {
         </DialogContent>
       </Dialog>
       
-      {/* API Key Settings Dialog */}
+      {/* API Settings Dialog */}
       <Dialog open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>RapidAPI Settings</DialogTitle>
+            <DialogTitle>Instagram API Settings</DialogTitle>
             <DialogDescription>
-              Add your RapidAPI key to fetch real Instagram stories
+              Configure your Instagram API integration by following the guide in <code>src/utils/instagramApi.md</code>
             </DialogDescription>
           </DialogHeader>
           
           <div className="space-y-4 py-4">
-            <div>
-              <label htmlFor="apiKey" className="text-sm font-medium text-gray-700 block mb-2">
-                RapidAPI Key
-              </label>
-              <Input
-                id="apiKey"
-                value={apiKey}
-                onChange={(e) => setApiKey(e.target.value)}
-                placeholder="Enter your RapidAPI key"
-                className="w-full"
-                type="password"
+            <div className="flex items-center space-x-2">
+              <input
+                id="useBackend"
+                type="checkbox"
+                checked={apiConfig.useBackend}
+                onChange={(e) => setApiConfig({...apiConfig, useBackend: e.target.checked})}
+                className="rounded border-gray-300"
               />
-              <p className="mt-2 text-xs text-gray-500">
-                Get your API key from <a href="https://rapidapi.com/hub" target="_blank" rel="noreferrer" className="text-blue-500 underline">RapidAPI</a>
-              </p>
+              <label htmlFor="useBackend" className="text-sm font-medium text-gray-700">
+                Use Backend Integration
+              </label>
             </div>
+            
+            {apiConfig.useBackend && (
+              <div>
+                <label htmlFor="serverUrl" className="text-sm font-medium text-gray-700 block mb-2">
+                  Backend Server URL
+                </label>
+                <Input
+                  id="serverUrl"
+                  value={apiConfig.serverUrl || ''}
+                  onChange={(e) => setApiConfig({...apiConfig, serverUrl: e.target.value})}
+                  placeholder="Enter your backend server URL (e.g., https://your-api.example.com)"
+                  className="w-full"
+                />
+                <p className="mt-2 text-xs text-gray-500">
+                  Set up your own backend following the instructions in the Instagram API guide
+                </p>
+              </div>
+            )}
           </div>
           
           <DialogFooter>
@@ -243,9 +258,9 @@ const SearchSection = () => {
             </Button>
             <Button 
               className="bg-blue-gradient hover:opacity-90"
-              onClick={handleSaveApiKey}
+              onClick={handleSaveConfig}
             >
-              Save API Key
+              Save Configuration
             </Button>
           </DialogFooter>
         </DialogContent>
