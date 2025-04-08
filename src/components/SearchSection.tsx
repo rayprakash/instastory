@@ -1,8 +1,8 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, ArrowRight, Download, X, Info } from "lucide-react";
+import { Search, ArrowRight, Download, X, Info, Settings } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -13,41 +13,62 @@ import {
 } from "@/components/ui/dialog";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { toast } from "sonner";
+import { fetchInstagramStories, saveRapidAPIKey, getRapidAPIKey, InstagramStory } from "@/utils/instagramApi";
 
 const SearchSection = () => {
   const [username, setUsername] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [results, setResults] = useState<any[]>([]);
+  const [results, setResults] = useState<InstagramStory[]>([]);
+  const [apiKey, setApiKey] = useState("");
 
-  const handleSearch = (e: React.FormEvent) => {
+  // Load saved API key on component mount
+  useEffect(() => {
+    const savedApiKey = getRapidAPIKey();
+    if (savedApiKey) {
+      setApiKey(savedApiKey);
+    }
+  }, []);
+
+  const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!username.trim()) return;
     
-    // Simulate search process
     setIsLoading(true);
     
-    // In a real app, this would be an API call to your backend
-    setTimeout(() => {
-      setIsLoading(false);
+    try {
+      // Use our Instagram API utility to fetch stories
+      const stories = await fetchInstagramStories(username.trim());
+      setResults(stories);
       setIsDialogOpen(true);
       
-      // Mock results - this is just a demo
-      setResults([
-        { id: 1, type: 'story', thumbnail: 'https://picsum.photos/200/300', timestamp: new Date().toISOString() },
-        { id: 2, type: 'story', thumbnail: 'https://picsum.photos/201/300', timestamp: new Date().toISOString() },
-        { id: 3, type: 'story', thumbnail: 'https://picsum.photos/202/300', timestamp: new Date().toISOString() },
-      ]);
-      
-      toast.info("This is a demo with mock data - real Instagram API integration requires backend development", {
-        duration: 5000,
-      });
-    }, 1500);
+      if (!getRapidAPIKey()) {
+        toast.info("Using mock data. Add your RapidAPI key in settings for real Instagram data.", {
+          duration: 5000,
+        });
+      }
+    } catch (error) {
+      console.error("Error fetching Instagram stories:", error);
+      toast.error("Failed to fetch Instagram stories. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleDownload = (id: number) => {
-    console.log(`Downloading item ${id}`);
+  const handleSaveApiKey = () => {
+    if (apiKey.trim()) {
+      saveRapidAPIKey(apiKey.trim());
+      toast.success("API key saved successfully!");
+      setIsSettingsOpen(false);
+    } else {
+      toast.error("Please enter a valid API key.");
+    }
+  };
+
+  const handleDownload = (id: string) => {
+    console.log(`Downloading story ${id}`);
     toast.info("Download functionality would be implemented in a full application", {
       duration: 3000,
     });
@@ -58,6 +79,19 @@ const SearchSection = () => {
     <div className="relative">
       <div className="max-w-3xl mx-auto my-8 px-4">
         <div className="glass rounded-xl p-6 md:p-8">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-bold text-instablue-800">Instagram Story Viewer</h2>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="flex items-center gap-1"
+              onClick={() => setIsSettingsOpen(true)}
+            >
+              <Settings size={18} />
+              <span className="hidden sm:inline">API Settings</span>
+            </Button>
+          </div>
+          
           <form onSubmit={handleSearch} className="flex flex-col gap-4">
             <div className="flex flex-col md:flex-row gap-3">
               <div className="flex-grow relative">
@@ -89,13 +123,17 @@ const SearchSection = () => {
                 )}
               </Button>
             </div>
-            <Alert className="bg-blue-50 text-blue-800 border-blue-200">
-              <Info className="h-4 w-4" />
-              <AlertTitle>Demo Mode</AlertTitle>
-              <AlertDescription>
-                This is a frontend demo. Real Instagram data requires backend API integration.
-              </AlertDescription>
-            </Alert>
+            
+            {!getRapidAPIKey() && (
+              <Alert className="bg-blue-50 text-blue-800 border-blue-200">
+                <Info className="h-4 w-4" />
+                <AlertTitle>API Key Required</AlertTitle>
+                <AlertDescription>
+                  Add your RapidAPI key in settings to view real Instagram stories.
+                </AlertDescription>
+              </Alert>
+            )}
+            
             <p className="text-sm text-gray-500 text-center">
               Enter a public Instagram username to view their stories anonymously
             </p>
@@ -103,6 +141,7 @@ const SearchSection = () => {
         </div>
       </div>
 
+      {/* Results Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
@@ -112,18 +151,20 @@ const SearchSection = () => {
             </DialogDescription>
           </DialogHeader>
           
-          <Alert className="mb-4 bg-blue-50 text-blue-800 border-blue-200">
-            <Info className="h-4 w-4" />
-            <AlertDescription>
-              These are sample images. Real Instagram API integration requires backend development.
-            </AlertDescription>
-          </Alert>
+          {!getRapidAPIKey() && (
+            <Alert className="mb-4 bg-blue-50 text-blue-800 border-blue-200">
+              <Info className="h-4 w-4" />
+              <AlertDescription>
+                Using mock data. Add your RapidAPI key in settings for real Instagram stories.
+              </AlertDescription>
+            </Alert>
+          )}
           
           <div className="grid grid-cols-3 gap-2 my-4">
-            {results.map((item) => (
-              <div key={item.id} className="relative group">
+            {results.map((story) => (
+              <div key={story.id} className="relative group">
                 <img 
-                  src={item.thumbnail} 
+                  src={story.mediaUrl} 
                   alt="Story thumbnail" 
                   className="aspect-square object-cover rounded-md"
                 />
@@ -131,7 +172,7 @@ const SearchSection = () => {
                   size="sm"
                   variant="ghost"
                   className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 bg-black/50 hover:bg-black/70 text-white rounded-full p-1 h-auto"
-                  onClick={() => handleDownload(item.id)}
+                  onClick={() => handleDownload(story.id)}
                 >
                   <Download size={14} />
                 </Button>
@@ -150,7 +191,11 @@ const SearchSection = () => {
             <Button 
               className="bg-blue-gradient hover:opacity-90"
               onClick={() => {
-                toast.info("This is a demo with mock data. Full functionality would require backend development.");
+                if (!getRapidAPIKey()) {
+                  toast.info("Add your RapidAPI key in settings for real Instagram data.");
+                } else {
+                  toast.info("This is a demo with limited functionality.");
+                }
               }}
             >
               View All Stories
@@ -159,10 +204,55 @@ const SearchSection = () => {
         </DialogContent>
       </Dialog>
       
-      {/* Ad space below search */}
-      <div className="ad-container mx-auto max-w-3xl">
-        Advertisement Space
-      </div>
+      {/* API Key Settings Dialog */}
+      <Dialog open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>RapidAPI Settings</DialogTitle>
+            <DialogDescription>
+              Add your RapidAPI key to fetch real Instagram stories
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            <div>
+              <label htmlFor="apiKey" className="text-sm font-medium text-gray-700 block mb-2">
+                RapidAPI Key
+              </label>
+              <Input
+                id="apiKey"
+                value={apiKey}
+                onChange={(e) => setApiKey(e.target.value)}
+                placeholder="Enter your RapidAPI key"
+                className="w-full"
+                type="password"
+              />
+              <p className="mt-2 text-xs text-gray-500">
+                Get your API key from <a href="https://rapidapi.com/hub" target="_blank" rel="noreferrer" className="text-blue-500 underline">RapidAPI</a>
+              </p>
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button 
+              variant="outline"
+              onClick={() => setIsSettingsOpen(false)}
+              className="mr-2"
+            >
+              Cancel
+            </Button>
+            <Button 
+              className="bg-blue-gradient hover:opacity-90"
+              onClick={handleSaveApiKey}
+            >
+              Save API Key
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Ad container */}
+      <div className="ad-container mx-auto max-w-3xl"></div>
     </div>
   );
 };
