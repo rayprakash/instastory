@@ -2,7 +2,10 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, ArrowRight, Download, X, Info, Settings } from "lucide-react";
+import { 
+  Search, ArrowRight, Download, X, Info, Settings, 
+  Instagram, Image, Play, Film, Bookmark, ExternalLink 
+} from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -13,14 +16,39 @@ import {
 } from "@/components/ui/dialog";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { toast } from "sonner";
-import { fetchInstagramStories, saveApiConfig, getApiConfig, InstagramStory, InstagramApiConfig } from "@/utils/instagramApi";
+import { 
+  fetchInstagramStories, 
+  fetchInstagramPosts,
+  fetchInstagramHighlights,
+  fetchInstagramReels,
+  fetchInstagramProfile,
+  saveApiConfig, 
+  getApiConfig, 
+  InstagramStory, 
+  InstagramPost,
+  InstagramProfile,
+  InstagramApiConfig,
+  ContentType
+} from "@/utils/instagramApi";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent } from "@/components/ui/card";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 const SearchSection = () => {
   const [username, setUsername] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [results, setResults] = useState<InstagramStory[]>([]);
+  const [isFullScreenView, setIsFullScreenView] = useState(false);
+  const [fullScreenMedia, setFullScreenMedia] = useState<{url: string, type: string} | null>(null);
+  
+  const [activeTab, setActiveTab] = useState<ContentType>("STORIES");
+  const [profile, setProfile] = useState<InstagramProfile | null>(null);
+  const [stories, setStories] = useState<InstagramStory[]>([]);
+  const [posts, setPosts] = useState<InstagramPost[]>([]);
+  const [highlights, setHighlights] = useState<InstagramStory[]>([]);
+  const [reels, setReels] = useState<InstagramPost[]>([]);
+  
   const [apiConfig, setApiConfig] = useState<InstagramApiConfig>({ useBackend: false });
 
   // Load saved API config on component mount
@@ -39,10 +67,35 @@ const SearchSection = () => {
     setIsLoading(true);
     
     try {
-      // Use our Instagram API utility to fetch stories
-      const stories = await fetchInstagramStories(username.trim());
-      setResults(stories);
+      // Show loading toast
+      toast.loading("Downloading profile data. Please wait...");
+      
+      // Fetch profile data
+      const profileData = await fetchInstagramProfile(username.trim());
+      setProfile(profileData);
+      
+      // Fetch stories
+      const storiesData = await fetchInstagramStories(username.trim());
+      setStories(storiesData);
+      
+      // Fetch posts
+      const postsData = await fetchInstagramPosts(username.trim());
+      setPosts(postsData);
+      
+      // Fetch highlights
+      const highlightsData = await fetchInstagramHighlights(username.trim());
+      setHighlights(highlightsData);
+      
+      // Fetch reels
+      const reelsData = await fetchInstagramReels(username.trim());
+      setReels(reelsData);
+      
+      // Open dialog with results
       setIsDialogOpen(true);
+      
+      // Dismiss loading toast and show success
+      toast.dismiss();
+      toast.success(`Successfully loaded @${username.trim()}'s content`);
       
       if (!apiConfig.useBackend) {
         toast.info("Using mock data. Configure backend integration in settings for real Instagram data.", {
@@ -50,8 +103,9 @@ const SearchSection = () => {
         });
       }
     } catch (error) {
-      console.error("Error fetching Instagram stories:", error);
-      toast.error("Failed to fetch Instagram stories. Please try again.");
+      console.error("Error fetching Instagram data:", error);
+      toast.dismiss();
+      toast.error("Failed to fetch Instagram data. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -68,12 +122,85 @@ const SearchSection = () => {
     setIsSettingsOpen(false);
   };
 
-  const handleDownload = (id: string) => {
-    console.log(`Downloading story ${id}`);
-    toast.info("Download functionality would be implemented in a full application", {
-      duration: 3000,
-    });
-    // In a real app, this would trigger the download
+  const handleDownload = (url: string, type: string, id: string) => {
+    toast.info("Starting download...", { duration: 2000 });
+    
+    // Create a hidden anchor element to trigger the download
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `instagram-${type}-${id}.${type === 'VIDEO' ? 'mp4' : 'jpg'}`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    toast.success("Download started!");
+  };
+  
+  const openFullscreen = (url: string, type: string) => {
+    setFullScreenMedia({ url, type });
+    setIsFullScreenView(true);
+  };
+  
+  const closeFullscreen = () => {
+    setIsFullScreenView(false);
+    setFullScreenMedia(null);
+  };
+
+  const renderMediaItem = (item: InstagramStory | InstagramPost, type: ContentType) => {
+    const { id, mediaType, mediaUrl } = item;
+    const thumbnailUrl = 'thumbnail' in item && item.thumbnail ? item.thumbnail : mediaUrl;
+    
+    return (
+      <div key={id} className="relative group overflow-hidden rounded-md">
+        {mediaType === 'VIDEO' ? (
+          <div className="aspect-square bg-gray-100 flex items-center justify-center">
+            <img 
+              src={thumbnailUrl} 
+              alt="Video thumbnail" 
+              className="w-full h-full object-cover"
+            />
+            <Play className="absolute text-white fill-white opacity-70 top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" size={28} />
+          </div>
+        ) : (
+          <div className="aspect-square bg-gray-100">
+            <img 
+              src={mediaUrl} 
+              alt={`Instagram ${type.toLowerCase()}`}
+              className="w-full h-full object-cover"
+            />
+          </div>
+        )}
+        
+        {/* Controls overlay */}
+        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all flex items-center justify-center opacity-0 group-hover:opacity-100">
+          <div className="flex gap-2">
+            <Button
+              size="sm"
+              variant="ghost"
+              className="bg-white/80 hover:bg-white text-gray-800 rounded-full p-1 h-auto w-auto"
+              onClick={() => openFullscreen(mediaUrl, mediaType)}
+            >
+              <ExternalLink size={16} />
+            </Button>
+            
+            <Button
+              size="sm"
+              variant="ghost" 
+              className="bg-white/80 hover:bg-white text-gray-800 rounded-full p-1 h-auto w-auto"
+              onClick={() => handleDownload(mediaUrl, mediaType, id)}
+            >
+              <Download size={16} />
+            </Button>
+          </div>
+        </div>
+        
+        {'caption' in item && item.caption && (
+          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-2 opacity-0 group-hover:opacity-100 transition-opacity">
+            <p className="text-white text-xs line-clamp-2">{item.caption}</p>
+          </div>
+        )}
+      </div>
+    );
   };
 
   return (
@@ -118,7 +245,7 @@ const SearchSection = () => {
                   </div>
                 ) : (
                   <div className="flex items-center gap-2">
-                    <span>View Stories</span>
+                    <span>View Instagram Content</span>
                     <ArrowRight size={16} />
                   </div>
                 )}
@@ -128,80 +255,160 @@ const SearchSection = () => {
             {!apiConfig.useBackend && (
               <Alert className="bg-blue-50 text-blue-800 border-blue-200">
                 <Info className="h-4 w-4" />
-                <AlertTitle>Backend Integration Required</AlertTitle>
+                <AlertTitle>Using Mock Data</AlertTitle>
                 <AlertDescription>
-                  Read the Instagram API guide in <code>src/utils/instagramApi.md</code> and configure backend integration.
+                  This application is using sample data to simulate Instagram content viewing. Real Instagram data requires backend integration.
                 </AlertDescription>
               </Alert>
             )}
             
             <p className="text-sm text-gray-500 text-center">
-              Enter a public Instagram username to view their stories anonymously
+              Enter a public Instagram username to view their content anonymously
             </p>
           </form>
         </div>
       </div>
 
-      {/* Results Dialog */}
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Stories from @{username}</DialogTitle>
-            <DialogDescription>
-              View or download stories without being detected
-            </DialogDescription>
-          </DialogHeader>
-          
-          {!apiConfig.useBackend && (
-            <Alert className="mb-4 bg-blue-50 text-blue-800 border-blue-200">
-              <Info className="h-4 w-4" />
-              <AlertDescription>
-                Using mock data. Read the Instagram API guide and implement backend integration for real data.
-              </AlertDescription>
-            </Alert>
+      {/* Instagram Content Dialog */}
+      <Dialog 
+        open={isDialogOpen} 
+        onOpenChange={setIsDialogOpen}
+      >
+        <DialogContent className="sm:max-w-5xl max-h-[90vh] overflow-y-auto">
+          {profile && (
+            <div className="flex items-center gap-4 mb-4">
+              <div className="h-16 w-16 rounded-full overflow-hidden">
+                <img 
+                  src={profile.profilePicture} 
+                  alt={profile.username}
+                  className="h-full w-full object-cover"
+                />
+              </div>
+              <div>
+                <h3 className="text-xl font-bold">@{profile.username}</h3>
+                {profile.fullName && <p className="text-gray-600">{profile.fullName}</p>}
+                <div className="flex gap-4 mt-1 text-sm text-gray-500">
+                  <span>{profile.postsCount} posts</span>
+                  {profile.followers && <span>{profile.followers.toLocaleString()} followers</span>}
+                  {profile.following && <span>{profile.following.toLocaleString()} following</span>}
+                </div>
+              </div>
+            </div>
           )}
           
-          <div className="grid grid-cols-3 gap-2 my-4">
-            {results.map((story) => (
-              <div key={story.id} className="relative group">
-                <img 
-                  src={story.mediaUrl} 
-                  alt="Story thumbnail" 
-                  className="aspect-square object-cover rounded-md"
-                />
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 bg-black/50 hover:bg-black/70 text-white rounded-full p-1 h-auto"
-                  onClick={() => handleDownload(story.id)}
-                >
-                  <Download size={14} />
-                </Button>
-              </div>
-            ))}
+          <Tabs defaultValue="STORIES" value={activeTab} onValueChange={(value) => setActiveTab(value as ContentType)}>
+            <TabsList className="w-full grid grid-cols-4">
+              <TabsTrigger value="STORIES" className="flex items-center gap-2">
+                <Image size={16} /> Stories
+              </TabsTrigger>
+              <TabsTrigger value="POSTS" className="flex items-center gap-2">
+                <Instagram size={16} /> Posts
+              </TabsTrigger>
+              <TabsTrigger value="HIGHLIGHTS" className="flex items-center gap-2">
+                <Bookmark size={16} /> Highlights
+              </TabsTrigger>
+              <TabsTrigger value="REELS" className="flex items-center gap-2">
+                <Film size={16} /> Reels
+              </TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="STORIES" className="mt-4">
+              {stories.length === 0 ? (
+                <div className="text-center py-8">
+                  <p>No stories found for this user.</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                  {stories.map(story => renderMediaItem(story, "STORIES"))}
+                </div>
+              )}
+            </TabsContent>
+            
+            <TabsContent value="POSTS" className="mt-4">
+              {posts.length === 0 ? (
+                <div className="text-center py-8">
+                  <p>No posts found for this user.</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                  {posts.map(post => renderMediaItem(post, "POSTS"))}
+                </div>
+              )}
+            </TabsContent>
+            
+            <TabsContent value="HIGHLIGHTS" className="mt-4">
+              {highlights.length === 0 ? (
+                <div className="text-center py-8">
+                  <p>No highlights found for this user.</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                  {highlights.map(highlight => renderMediaItem(highlight, "HIGHLIGHTS"))}
+                </div>
+              )}
+            </TabsContent>
+            
+            <TabsContent value="REELS" className="mt-4">
+              {reels.length === 0 ? (
+                <div className="text-center py-8">
+                  <p>No reels found for this user.</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                  {reels.map(reel => renderMediaItem(reel, "REELS"))}
+                </div>
+              )}
+            </TabsContent>
+          </Tabs>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Full screen media view */}
+      <Dialog 
+        open={isFullScreenView} 
+        onOpenChange={closeFullscreen}
+      >
+        <DialogContent className="sm:max-w-6xl max-h-screen p-0 overflow-hidden bg-black">
+          <div className="absolute top-2 right-2 z-10">
+            <Button 
+              variant="ghost" 
+              size="sm"
+              className="text-white bg-black/50 hover:bg-black/70 rounded-full p-2 h-auto w-auto"
+              onClick={closeFullscreen}
+            >
+              <X size={20} />
+            </Button>
           </div>
           
-          <DialogFooter>
-            <Button 
-              variant="outline"
-              onClick={() => setIsDialogOpen(false)}
-              className="mr-2"
-            >
-              Close
-            </Button>
-            <Button 
-              className="bg-blue-gradient hover:opacity-90"
-              onClick={() => {
-                if (!apiConfig.useBackend) {
-                  toast.info("Read the Instagram API guide and implement backend integration.");
-                } else {
-                  toast.info("This is a demo with limited functionality.");
-                }
-              }}
-            >
-              View All Stories
-            </Button>
-          </DialogFooter>
+          {fullScreenMedia && (
+            <div className="w-full h-full flex items-center justify-center bg-black">
+              {fullScreenMedia.type === 'VIDEO' ? (
+                <video 
+                  src={fullScreenMedia.url} 
+                  controls 
+                  autoPlay 
+                  className="max-h-[80vh] max-w-full"
+                />
+              ) : (
+                <img 
+                  src={fullScreenMedia.url} 
+                  alt="Full size media" 
+                  className="max-h-[80vh] max-w-full object-contain"
+                />
+              )}
+            </div>
+          )}
+          
+          <div className="absolute bottom-4 right-4">
+            {fullScreenMedia && (
+              <Button 
+                className="bg-blue-gradient hover:opacity-90"
+                onClick={() => handleDownload(fullScreenMedia.url, fullScreenMedia.type, 'fullview')}
+              >
+                <Download size={16} className="mr-2" /> Download
+              </Button>
+            )}
+          </div>
         </DialogContent>
       </Dialog>
       
