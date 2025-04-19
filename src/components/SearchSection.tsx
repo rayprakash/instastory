@@ -50,7 +50,8 @@ const SearchSection = () => {
   
   const [apiConfig, setApiConfig] = useState<InstagramApiConfig>({ 
     useBackend: false, 
-    useSupabase: true 
+    useSupabase: true,
+    serverUrl: undefined
   });
 
   useEffect(() => {

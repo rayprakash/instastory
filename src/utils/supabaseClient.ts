@@ -16,9 +16,6 @@ export const invokeInstagramViewerFunction = async (
       body: { 
         username,
         endpoint 
-      },
-      headers: {
-        'Content-Type': 'application/json'
       }
     });
 
