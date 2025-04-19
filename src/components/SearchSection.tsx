@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -49,9 +48,11 @@ const SearchSection = () => {
   const [highlights, setHighlights] = useState<InstagramStory[]>([]);
   const [reels, setReels] = useState<InstagramPost[]>([]);
   
-  const [apiConfig, setApiConfig] = useState<InstagramApiConfig>({ useBackend: false });
+  const [apiConfig, setApiConfig] = useState<InstagramApiConfig>({ 
+    useBackend: false, 
+    useSupabase: true 
+  });
 
-  // Load saved API config on component mount
   useEffect(() => {
     const savedConfig = getApiConfig();
     if (savedConfig) {
@@ -67,33 +68,25 @@ const SearchSection = () => {
     setIsLoading(true);
     
     try {
-      // Show loading toast
       toast.loading("Downloading profile data. Please wait...");
       
-      // Fetch profile data
       const profileData = await fetchInstagramProfile(username.trim());
       setProfile(profileData);
       
-      // Fetch stories
       const storiesData = await fetchInstagramStories(username.trim());
       setStories(storiesData);
       
-      // Fetch posts
       const postsData = await fetchInstagramPosts(username.trim());
       setPosts(postsData);
       
-      // Fetch highlights
       const highlightsData = await fetchInstagramHighlights(username.trim());
       setHighlights(highlightsData);
       
-      // Fetch reels
       const reelsData = await fetchInstagramReels(username.trim());
       setReels(reelsData);
       
-      // Open dialog with results
       setIsDialogOpen(true);
       
-      // Dismiss loading toast and show success
       toast.dismiss();
       toast.success(`Successfully loaded @${username.trim()}'s content`);
       
@@ -112,13 +105,11 @@ const SearchSection = () => {
   };
 
   const handleSaveConfig = () => {
-    // Validate that at least one option is selected
     if (!apiConfig.useBackend && !apiConfig.useSupabase) {
       toast.error("Please select at least one data source option.");
       return;
     }
     
-    // Validate server URL if using custom backend
     if (apiConfig.useBackend && !apiConfig.serverUrl) {
       toast.error("Please enter a valid server URL if using custom backend integration.");
       return;
@@ -132,7 +123,6 @@ const SearchSection = () => {
   const handleDownload = (url: string, type: string, id: string) => {
     toast.info("Starting download...", { duration: 2000 });
     
-    // Create a hidden anchor element to trigger the download
     const link = document.createElement('a');
     link.href = url;
     link.download = `instagram-${type}-${id}.${type === 'VIDEO' ? 'mp4' : 'jpg'}`;
@@ -178,7 +168,6 @@ const SearchSection = () => {
           </div>
         )}
         
-        {/* Controls overlay */}
         <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all flex items-center justify-center opacity-0 group-hover:opacity-100">
           <div className="flex gap-2">
             <Button
@@ -286,7 +275,6 @@ const SearchSection = () => {
         </div>
       </div>
 
-      {/* Instagram Content Dialog */}
       <Dialog 
         open={isDialogOpen} 
         onOpenChange={setIsDialogOpen}
@@ -380,7 +368,6 @@ const SearchSection = () => {
         </DialogContent>
       </Dialog>
       
-      {/* Full screen media view */}
       <Dialog 
         open={isFullScreenView} 
         onOpenChange={closeFullscreen}
@@ -429,7 +416,6 @@ const SearchSection = () => {
         </DialogContent>
       </Dialog>
       
-      {/* API Settings Dialog */}
       <Dialog open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
@@ -513,7 +499,6 @@ const SearchSection = () => {
         </DialogContent>
       </Dialog>
       
-      {/* Ad container */}
       <div className="ad-container mx-auto max-w-3xl"></div>
     </div>
   );

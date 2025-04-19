@@ -19,23 +19,26 @@ serve(async (req) => {
   }
   
   try {
-    const url = new URL(req.url);
-    const path = url.pathname.split('/').filter(Boolean);
+    // Parse the request body
+    const body = await req.json();
+    const { endpoint, username } = body;
     
-    if (path[1] === 'profile') {
-      const username = path[2];
+    if (!endpoint || !username) {
+      return new Response(JSON.stringify({ error: 'Missing endpoint or username' }), { 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 400 
+      });
+    }
+    
+    if (endpoint === 'profile') {
       return await handleProfileRequest(username);
-    } else if (path[1] === 'stories') {
-      const username = path[2];
+    } else if (endpoint === 'stories') {
       return await handleStoriesRequest(username);
-    } else if (path[1] === 'posts') {
-      const username = path[2];
+    } else if (endpoint === 'posts') {
       return await handlePostsRequest(username);
-    } else if (path[1] === 'highlights') {
-      const username = path[2];
+    } else if (endpoint === 'highlights') {
       return await handleHighlightsRequest(username);
-    } else if (path[1] === 'reels') {
-      const username = path[2];
+    } else if (endpoint === 'reels') {
       return await handleReelsRequest(username);
     }
 

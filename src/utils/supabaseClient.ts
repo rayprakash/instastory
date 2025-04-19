@@ -13,12 +13,13 @@ export const invokeInstagramViewerFunction = async (
 ) => {
   try {
     const { data, error } = await supabase.functions.invoke("instagram-viewer", {
-      body: { username },
+      body: { 
+        username,
+        endpoint 
+      },
       headers: {
         'Content-Type': 'application/json'
-      },
-      method: 'GET',
-      path: `/${endpoint}/${username}`
+      }
     });
 
     if (error) {
