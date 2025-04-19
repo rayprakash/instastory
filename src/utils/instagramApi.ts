@@ -1,9 +1,11 @@
+
 /**
  * Instagram API Integration Utility
  * 
- * This file contains helper functions for integrating with Instagram's API.
- * For full implementation details, see the guide at src/utils/instagramApi.md
+ * This file contains helper functions for integrating with Instagram's API via Supabase Edge Functions.
  */
+
+import { invokeInstagramViewerFunction } from './supabaseClient';
 
 // Instagram Story Data Structure
 export interface InstagramStory {
@@ -48,7 +50,14 @@ const INSTAGRAM_API_CONFIG_STORAGE = 'instaview-api-config';
 export interface InstagramApiConfig {
   serverUrl?: string;
   useBackend: boolean;
+  useSupabase: boolean;
 }
+
+// Default API config
+const DEFAULT_API_CONFIG: InstagramApiConfig = {
+  useBackend: false,
+  useSupabase: true
+};
 
 /**
  * Save the Instagram API config to localStorage
@@ -70,14 +79,14 @@ export const saveApiConfig = (config: InstagramApiConfig): void => {
  * @returns The saved API config or default values if not found
  */
 export const getApiConfig = (): InstagramApiConfig => {
-  if (typeof window === 'undefined') return { useBackend: false };
+  if (typeof window === 'undefined') return DEFAULT_API_CONFIG;
   
   try {
     const config = localStorage.getItem(INSTAGRAM_API_CONFIG_STORAGE);
-    return config ? JSON.parse(config) : { useBackend: false };
+    return config ? JSON.parse(config) : DEFAULT_API_CONFIG;
   } catch (error) {
     console.error('Error retrieving Instagram API config:', error);
-    return { useBackend: false };
+    return DEFAULT_API_CONFIG;
   }
 };
 
@@ -237,28 +246,41 @@ const MOCK_PROFILES: Record<string, InstagramProfile> = {
 export const fetchInstagramStories = async (username: string): Promise<InstagramStory[]> => {
   const config = getApiConfig();
   
-  // If backend integration is not configured, return mock data
-  if (!config.useBackend || !config.serverUrl) {
-    console.warn('Backend integration not configured, returning mock data for stories');
-    return MOCK_STORIES;
+  // If Supabase integration is enabled
+  if (config.useSupabase) {
+    try {
+      const data = await invokeInstagramViewerFunction('stories', username);
+      return data.stories || [];
+    } catch (error) {
+      console.error('Error fetching Instagram stories from Supabase:', error);
+      // Fall back to mock data if the API call fails
+      return MOCK_STORIES;
+    }
   }
   
-  try {
-    // Make call to your backend server which handles Instagram API securely
-    const response = await fetch(`${config.serverUrl}/api/instagram/stories/${username}`);
-    
-    if (!response.ok) {
-      throw new Error(`API call failed with status: ${response.status}`);
+  // If third-party backend integration is enabled
+  if (config.useBackend && config.serverUrl) {
+    try {
+      // Make call to your backend server which handles Instagram API securely
+      const response = await fetch(`${config.serverUrl}/api/instagram/stories/${username}`);
+      
+      if (!response.ok) {
+        throw new Error(`API call failed with status: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      return data.stories || MOCK_STORIES;
+      
+    } catch (error) {
+      console.error('Error fetching Instagram stories from custom backend:', error);
+      // Return mock data if the API call fails
+      return MOCK_STORIES;
     }
-    
-    const data = await response.json();
-    return data.stories || MOCK_STORIES;
-    
-  } catch (error) {
-    console.error('Error fetching Instagram stories:', error);
-    // Return mock data if the API call fails
-    return MOCK_STORIES;
   }
+  
+  // Default to mock data
+  console.warn('Using mock data for stories - no backend integration configured');
+  return MOCK_STORIES;
 };
 
 /**
@@ -269,27 +291,40 @@ export const fetchInstagramStories = async (username: string): Promise<Instagram
 export const fetchInstagramPosts = async (username: string): Promise<InstagramPost[]> => {
   const config = getApiConfig();
   
-  // If backend integration is not configured, return mock data
-  if (!config.useBackend || !config.serverUrl) {
-    console.warn('Backend integration not configured, returning mock data for posts');
-    return MOCK_POSTS;
+  // If Supabase integration is enabled
+  if (config.useSupabase) {
+    try {
+      const data = await invokeInstagramViewerFunction('posts', username);
+      return data.posts || [];
+    } catch (error) {
+      console.error('Error fetching Instagram posts from Supabase:', error);
+      // Fall back to mock data if the API call fails
+      return MOCK_POSTS;
+    }
   }
   
-  try {
-    const response = await fetch(`${config.serverUrl}/api/instagram/posts/${username}`);
-    
-    if (!response.ok) {
-      throw new Error(`API call failed with status: ${response.status}`);
+  // If backend integration is not configured, return mock data
+  if (config.useBackend && config.serverUrl) {
+    try {
+      const response = await fetch(`${config.serverUrl}/api/instagram/posts/${username}`);
+      
+      if (!response.ok) {
+        throw new Error(`API call failed with status: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      return data.posts || MOCK_POSTS;
+      
+    } catch (error) {
+      console.error('Error fetching Instagram posts from custom backend:', error);
+      // Return mock data if the API call fails
+      return MOCK_POSTS;
     }
-    
-    const data = await response.json();
-    return data.posts || MOCK_POSTS;
-    
-  } catch (error) {
-    console.error('Error fetching Instagram posts:', error);
-    // Return mock data if the API call fails
-    return MOCK_POSTS;
   }
+  
+  // Default to mock data
+  console.warn('Using mock data for posts - no backend integration configured');
+  return MOCK_POSTS;
 };
 
 /**
@@ -300,26 +335,39 @@ export const fetchInstagramPosts = async (username: string): Promise<InstagramPo
 export const fetchInstagramHighlights = async (username: string): Promise<InstagramStory[]> => {
   const config = getApiConfig();
   
-  // If backend integration is not configured, return mock data
-  if (!config.useBackend || !config.serverUrl) {
-    console.warn('Backend integration not configured, returning mock data for highlights');
-    return MOCK_HIGHLIGHTS;
+  // If Supabase integration is enabled
+  if (config.useSupabase) {
+    try {
+      const data = await invokeInstagramViewerFunction('highlights', username);
+      return data.highlights || [];
+    } catch (error) {
+      console.error('Error fetching Instagram highlights from Supabase:', error);
+      // Fall back to mock data if the API call fails
+      return MOCK_HIGHLIGHTS;
+    }
   }
   
-  try {
-    const response = await fetch(`${config.serverUrl}/api/instagram/highlights/${username}`);
-    
-    if (!response.ok) {
-      throw new Error(`API call failed with status: ${response.status}`);
+  // If backend integration is not configured, return mock data
+  if (config.useBackend && config.serverUrl) {
+    try {
+      const response = await fetch(`${config.serverUrl}/api/instagram/highlights/${username}`);
+      
+      if (!response.ok) {
+        throw new Error(`API call failed with status: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      return data.highlights || MOCK_HIGHLIGHTS;
+      
+    } catch (error) {
+      console.error('Error fetching Instagram highlights from custom backend:', error);
+      return MOCK_HIGHLIGHTS;
     }
-    
-    const data = await response.json();
-    return data.highlights || MOCK_HIGHLIGHTS;
-    
-  } catch (error) {
-    console.error('Error fetching Instagram highlights:', error);
-    return MOCK_HIGHLIGHTS;
   }
+  
+  // Default to mock data
+  console.warn('Using mock data for highlights - no backend integration configured');
+  return MOCK_HIGHLIGHTS;
 };
 
 /**
@@ -330,26 +378,39 @@ export const fetchInstagramHighlights = async (username: string): Promise<Instag
 export const fetchInstagramReels = async (username: string): Promise<InstagramPost[]> => {
   const config = getApiConfig();
   
-  // If backend integration is not configured, return mock data
-  if (!config.useBackend || !config.serverUrl) {
-    console.warn('Backend integration not configured, returning mock data for reels');
-    return MOCK_REELS;
+  // If Supabase integration is enabled
+  if (config.useSupabase) {
+    try {
+      const data = await invokeInstagramViewerFunction('reels', username);
+      return data.reels || [];
+    } catch (error) {
+      console.error('Error fetching Instagram reels from Supabase:', error);
+      // Fall back to mock data if the API call fails
+      return MOCK_REELS;
+    }
   }
   
-  try {
-    const response = await fetch(`${config.serverUrl}/api/instagram/reels/${username}`);
-    
-    if (!response.ok) {
-      throw new Error(`API call failed with status: ${response.status}`);
+  // If backend integration is not configured, return mock data
+  if (config.useBackend && config.serverUrl) {
+    try {
+      const response = await fetch(`${config.serverUrl}/api/instagram/reels/${username}`);
+      
+      if (!response.ok) {
+        throw new Error(`API call failed with status: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      return data.reels || MOCK_REELS;
+      
+    } catch (error) {
+      console.error('Error fetching Instagram reels from custom backend:', error);
+      return MOCK_REELS;
     }
-    
-    const data = await response.json();
-    return data.reels || MOCK_REELS;
-    
-  } catch (error) {
-    console.error('Error fetching Instagram reels:', error);
-    return MOCK_REELS;
   }
+  
+  // Default to mock data
+  console.warn('Using mock data for reels - no backend integration configured');
+  return MOCK_REELS;
 };
 
 /**
@@ -360,30 +421,44 @@ export const fetchInstagramReels = async (username: string): Promise<InstagramPo
 export const fetchInstagramProfile = async (username: string): Promise<InstagramProfile | null> => {
   const config = getApiConfig();
   
-  if (!config.serverUrl) {
-    console.error("Backend service URL not configured. Please set it in API Settings.");
-    return null;
+  // If Supabase integration is enabled
+  if (config.useSupabase) {
+    try {
+      const profile = await invokeInstagramViewerFunction('profile', username);
+      return profile || null;
+    } catch (error) {
+      console.error('Error fetching Instagram profile from Supabase:', error);
+      // Fall back to mock data
+      return MOCK_PROFILES[username] || MOCK_PROFILES['travel_photographer'];
+    }
   }
   
-  try {
-    const response = await fetch(`${config.serverUrl}/api/instagram/profile/${username}`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        // You might need additional authorization headers depending on your backend
+  // If custom backend is configured
+  if (config.useBackend && config.serverUrl) {
+    try {
+      const response = await fetch(`${config.serverUrl}/api/instagram/profile/${username}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error(`API call failed with status: ${response.status}`);
       }
-    });
-    
-    if (!response.ok) {
-      throw new Error(`API call failed with status: ${response.status}`);
+      
+      const profile = await response.json();
+      return profile || null;
+      
+    } catch (error) {
+      console.error('Error fetching Instagram profile from custom backend:', error);
+      console.error("Failed to fetch Instagram profile. Check your backend configuration.");
+      // Fall back to mock data
+      return MOCK_PROFILES[username] || MOCK_PROFILES['travel_photographer'];
     }
-    
-    const profile = await response.json();
-    return profile || null;
-    
-  } catch (error) {
-    console.error('Error fetching Instagram profile:', error);
-    console.error("Failed to fetch Instagram profile. Check your backend configuration.");
-    return null;
   }
+  
+  // Default to mock profile data
+  console.warn('Using mock data for profile - no backend integration configured');
+  return MOCK_PROFILES[username] || MOCK_PROFILES['travel_photographer'];
 };

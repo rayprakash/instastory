@@ -1,1 +1,5 @@
+
 project_id = "shogtxnajvaxgjrmoseu"
+
+[functions.instagram-viewer]
+verify_jwt = false

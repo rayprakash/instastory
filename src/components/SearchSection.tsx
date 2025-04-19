@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { 
   Search, ArrowRight, Download, X, Info, Settings, 
-  Instagram, Image, Play, Film, Bookmark, ExternalLink 
+  Instagram, Image, Play, Film, Bookmark, ExternalLink, Database
 } from "lucide-react";
 import {
   Dialog,
@@ -97,7 +97,7 @@ const SearchSection = () => {
       toast.dismiss();
       toast.success(`Successfully loaded @${username.trim()}'s content`);
       
-      if (!apiConfig.useBackend) {
+      if (!apiConfig.useBackend && !apiConfig.useSupabase) {
         toast.info("Using mock data. Configure backend integration in settings for real Instagram data.", {
           duration: 5000,
         });
@@ -112,8 +112,15 @@ const SearchSection = () => {
   };
 
   const handleSaveConfig = () => {
+    // Validate that at least one option is selected
+    if (!apiConfig.useBackend && !apiConfig.useSupabase) {
+      toast.error("Please select at least one data source option.");
+      return;
+    }
+    
+    // Validate server URL if using custom backend
     if (apiConfig.useBackend && !apiConfig.serverUrl) {
-      toast.error("Please enter a valid server URL if using backend integration.");
+      toast.error("Please enter a valid server URL if using custom backend integration.");
       return;
     }
     
@@ -252,12 +259,22 @@ const SearchSection = () => {
               </Button>
             </div>
             
-            {!apiConfig.useBackend && (
+            {!apiConfig.useBackend && !apiConfig.useSupabase && (
               <Alert className="bg-blue-50 text-blue-800 border-blue-200">
                 <Info className="h-4 w-4" />
                 <AlertTitle>Using Mock Data</AlertTitle>
                 <AlertDescription>
-                  This application is using sample data to simulate Instagram content viewing. Real Instagram data requires backend integration.
+                  This application is using sample data to simulate Instagram content viewing. Configure backend integration in settings for real Instagram data.
+                </AlertDescription>
+              </Alert>
+            )}
+            
+            {apiConfig.useSupabase && (
+              <Alert className="bg-green-50 text-green-800 border-green-200">
+                <Database className="h-4 w-4" />
+                <AlertTitle>Using Supabase Integration</AlertTitle>
+                <AlertDescription>
+                  This application is using Supabase Edge Functions to fetch Instagram data.
                 </AlertDescription>
               </Alert>
             )}
@@ -418,11 +435,24 @@ const SearchSection = () => {
           <DialogHeader>
             <DialogTitle>Instagram API Settings</DialogTitle>
             <DialogDescription>
-              Configure your Instagram API integration by following the guide in <code>src/utils/instagramApi.md</code>
+              Configure your Instagram API integration options
             </DialogDescription>
           </DialogHeader>
           
           <div className="space-y-4 py-4">
+            <div className="flex items-center space-x-2">
+              <input
+                id="useSupabase"
+                type="checkbox"
+                checked={apiConfig.useSupabase}
+                onChange={(e) => setApiConfig({...apiConfig, useSupabase: e.target.checked})}
+                className="rounded border-gray-300"
+              />
+              <label htmlFor="useSupabase" className="text-sm font-medium text-gray-700">
+                Use Supabase Edge Functions (Recommended)
+              </label>
+            </div>
+            
             <div className="flex items-center space-x-2">
               <input
                 id="useBackend"
@@ -432,7 +462,7 @@ const SearchSection = () => {
                 className="rounded border-gray-300"
               />
               <label htmlFor="useBackend" className="text-sm font-medium text-gray-700">
-                Use Backend Integration
+                Use Custom Backend Integration
               </label>
             </div>
             
@@ -452,6 +482,16 @@ const SearchSection = () => {
                   Set up your own backend following the instructions in the Instagram API guide
                 </p>
               </div>
+            )}
+            
+            {!apiConfig.useBackend && !apiConfig.useSupabase && (
+              <Alert className="bg-amber-50 text-amber-800 border-amber-200">
+                <Info className="h-4 w-4" />
+                <AlertTitle>Mock Data Only</AlertTitle>
+                <AlertDescription>
+                  With no backend integration selected, the app will use mock data only.
+                </AlertDescription>
+              </Alert>
             )}
           </div>
           
