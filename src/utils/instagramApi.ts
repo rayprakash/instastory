@@ -1,4 +1,3 @@
-
 /**
  * Instagram API Integration Utility
  * 
@@ -361,21 +360,19 @@ export const fetchInstagramReels = async (username: string): Promise<InstagramPo
 export const fetchInstagramProfile = async (username: string): Promise<InstagramProfile | null> => {
   const config = getApiConfig();
   
-  // If backend integration is not configured, return mock data
-  if (!config.useBackend || !config.serverUrl) {
-    console.warn('Backend integration not configured, returning mock data for profile');
-    // Return mock profile if it exists, or create a basic one
-    return MOCK_PROFILES[username] || {
-      username,
-      profilePicture: 'https://source.unsplash.com/random/150x150',
-      fullName: username,
-      postsCount: MOCK_POSTS.length,
-      isPrivate: false
-    };
+  if (!config.serverUrl) {
+    console.error("Backend service URL not configured. Please set it in API Settings.");
+    return null;
   }
   
   try {
-    const response = await fetch(`${config.serverUrl}/api/instagram/profile/${username}`);
+    const response = await fetch(`${config.serverUrl}/api/instagram/profile/${username}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        // You might need additional authorization headers depending on your backend
+      }
+    });
     
     if (!response.ok) {
       throw new Error(`API call failed with status: ${response.status}`);
@@ -386,12 +383,7 @@ export const fetchInstagramProfile = async (username: string): Promise<Instagram
     
   } catch (error) {
     console.error('Error fetching Instagram profile:', error);
-    return MOCK_PROFILES[username] || {
-      username,
-      profilePicture: 'https://source.unsplash.com/random/150x150',
-      fullName: username,
-      postsCount: MOCK_POSTS.length,
-      isPrivate: false
-    };
+    console.error("Failed to fetch Instagram profile. Check your backend configuration.");
+    return null;
   }
 };
